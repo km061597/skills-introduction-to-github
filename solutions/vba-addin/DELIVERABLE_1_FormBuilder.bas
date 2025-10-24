@@ -1,6 +1,6 @@
 Attribute VB_Name = "xpdf_FormBuilderModule_v8k2m"
 '===============================================================================
-' DELIVERABLE 1: UserForm Creation Code
+' DELIVERABLE 1: UserForm Creation Code - CORRECTED VERSION
 ' Purpose: Programmatically creates the complete UserForm with all controls
 ' Run this ONCE to create the form, then paste Deliverable 2 into the form
 '===============================================================================
@@ -40,14 +40,10 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 780
         .Height = 620
         .BackColor = &HF0F0F0
-        .BorderStyle = 0 ' fmBorderStyleNone - we'll add custom
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .ShowModal = True
-        .StartUpPosition = 1 ' CenterOwner
+        .StartUpPosition = 1
     End With
 
-    ' ===== HEADER PANEL =====
+    ' ===== HEADER LABELS =====
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblHeaderTitle_m4k8")
     With ctrl
         .Left = 10
@@ -55,13 +51,10 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 760
         .Height = 30
         .Caption = "Smart Excel to PDF Converter - Enterprise Edition"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 14
-        .Font.Bold = True
-        .ForeColor = &H8B4F1F ' Dark blue
+        .ForeColor = &H8B4F1F
         .BackColor = &HFFFFFF
-        .TextAlign = 2 ' fmTextAlignCenter
-        .BackStyle = 1 ' fmBackStyleOpaque
+        .TextAlign = 2
+        .BackStyle = 1
     End With
 
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblHeaderSubtitle_n7j2")
@@ -71,11 +64,9 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 760
         .Height = 18
         .Caption = "Intelligent analysis • Handles dense data & merged cells • Professional output"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .ForeColor = &H808080
         .BackColor = &HFFFFFF
-        .TextAlign = 2 ' fmTextAlignCenter
+        .TextAlign = 2
         .BackStyle = 1
     End With
 
@@ -87,9 +78,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 760
         .Height = 75
         .Caption = "1. Select Excel File"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .Font.Bold = True
         .ForeColor = &H8B4F1F
         .BackColor = &HF0F0F0
     End With
@@ -100,8 +88,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Top = 25
         .Width = 520
         .Height = 24
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .Locked = True
         .BackColor = &HE0E0E0
         .Text = ""
@@ -114,8 +100,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 100
         .Height = 24
         .Caption = "Browse..."
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .BackColor = &HE2E2E2
     End With
 
@@ -126,8 +110,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 100
         .Height = 24
         .Caption = "Use Active"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .BackColor = &HE2E2E2
     End With
 
@@ -139,9 +121,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 370
         .Height = 280
         .Caption = "2. Select Sheets to Convert"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .Font.Bold = True
         .ForeColor = &H8B4F1F
         .BackColor = &HF0F0F0
     End With
@@ -153,8 +132,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 85
         .Height = 22
         .Caption = "Select All"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .BackColor = &HE2E2E2
     End With
 
@@ -165,8 +142,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 85
         .Height = 22
         .Caption = "Clear All"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .BackColor = &HE2E2E2
     End With
 
@@ -177,8 +152,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 85
         .Height = 22
         .Caption = "Invert"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .BackColor = &HE2E2E2
     End With
 
@@ -189,9 +162,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 75
         .Height = 22
         .Caption = "Analyze"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
-        .Font.Bold = True
         .BackColor = &HC0FFC0
     End With
 
@@ -201,9 +171,7 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Top = 53
         .Width = 345
         .Height = 215
-        .Font.Name = "Consolas"
-        .Font.Size = 8
-        .MultiSelect = 1 ' fmMultiSelectMulti
+        .MultiSelect = 1
         .BackColor = &HFFFFFF
     End With
 
@@ -215,9 +183,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 380
         .Height = 280
         .Caption = "Sheet Analysis & Recommendations"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .Font.Bold = True
         .ForeColor = &H8B4F1F
         .BackColor = &HF0F0F0
     End With
@@ -228,19 +193,17 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Top = 25
         .Width = 360
         .Height = 243
-        .Font.Name = "Consolas"
-        .Font.Size = 8
         .MultiLine = True
-        .ScrollBars = 2 ' fmScrollBarsVertical
+        .ScrollBars = 2
         .Locked = True
         .BackColor = &HFFFFF0
-        .Text = "Click 'Analyze' to scan selected workbook..." & vbCrLf & vbCrLf & _
+        .Text = "Click 'Analyze' to scan workbook..." & vbCrLf & vbCrLf & _
                 "Features:" & vbCrLf & _
-                "• Handles merged cells" & vbCrLf & _
-                "• Processes very long text (1000s of chars)" & vbCrLf & _
-                "• Smart text wrapping" & vbCrLf & _
-                "• Automatic scaling recommendations" & vbCrLf & _
-                "• Supports .xlsx, .xlsm, .xlsb formats"
+                "  • Handles merged cells" & vbCrLf & _
+                "  • Processes very long text" & vbCrLf & _
+                "  • Smart text wrapping" & vbCrLf & _
+                "  • Auto scaling recommendations" & vbCrLf & _
+                "  • Supports .xlsx .xlsm .xlsb"
     End With
 
     ' ===== PDF SETTINGS FRAME =====
@@ -251,14 +214,11 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 500
         .Height = 130
         .Caption = "3. PDF Settings & Customization"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .Font.Bold = True
         .ForeColor = &H8B4F1F
         .BackColor = &HF0F0F0
     End With
 
-    ' Orientation
+    ' Orientation Label
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblOrientation_j3m8", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 10
@@ -266,27 +226,20 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 90
         .Height = 18
         .Caption = "Orientation:"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .BackStyle = 0
     End With
 
+    ' Orientation ComboBox
     Set ctrl = formObj.Controls.Add("Forms.ComboBox.1", "xpdf_cboOrientation_k9n2", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 105
         .Top = 23
         .Width = 115
         .Height = 20
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .Style = 2 ' fmStyleDropDownList
-        .AddItem "Auto (Smart)"
-        .AddItem "Portrait"
-        .AddItem "Landscape"
-        .ListIndex = 0
+        .Style = 2
     End With
 
-    ' Paper Size
+    ' Paper Size Label
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblPaperSize_m2k7", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 230
@@ -294,29 +247,20 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 75
         .Height = 18
         .Caption = "Paper Size:"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .BackStyle = 0
     End With
 
+    ' Paper Size ComboBox
     Set ctrl = formObj.Controls.Add("Forms.ComboBox.1", "xpdf_cboPaperSize_n8j3", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 310
         .Top = 23
         .Width = 95
         .Height = 20
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .Style = 2
-        .AddItem "Letter"
-        .AddItem "Legal"
-        .AddItem "A4"
-        .AddItem "A3"
-        .AddItem "Tabloid"
-        .ListIndex = 0
     End With
 
-    ' Scaling Mode
+    ' Fit to Width Checkbox
     Set ctrl = formObj.Controls.Add("Forms.CheckBox.1", "xpdf_chkFitToWidth_k3m9", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 10
@@ -324,12 +268,11 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 210
         .Height = 18
         .Caption = "Fit to Page Width (Recommended)"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .Value = True
         .BackStyle = 0
     End With
 
+    ' Scale Label
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblScale_m7n2", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 230
@@ -337,11 +280,21 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 75
         .Height = 18
         .Caption = "Scale %:"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .BackStyle = 0
     End With
 
+    ' Scale TextBox
+    Set ctrl = formObj.Controls.Add("Forms.TextBox.1", "xpdf_txtScale_n3k7", formObj.Controls("xpdf_frameSettings_n4k9"))
+    With ctrl
+        .Left = 310
+        .Top = 51
+        .Width = 70
+        .Height = 20
+        .Text = "100"
+        .TextAlign = 3
+    End With
+
+    ' Scale SpinButton
     Set ctrl = formObj.Controls.Add("Forms.SpinButton.1", "xpdf_spinScale_k8j4", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 385
@@ -354,19 +307,7 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .SmallChange = 5
     End With
 
-    Set ctrl = formObj.Controls.Add("Forms.TextBox.1", "xpdf_txtScale_n3k7", formObj.Controls("xpdf_frameSettings_n4k9"))
-    With ctrl
-        .Left = 310
-        .Top = 51
-        .Width = 70
-        .Height = 20
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .Text = "100"
-        .TextAlign = 3 ' fmTextAlignRight
-    End With
-
-    ' Margins Section
+    ' Margins Header Label
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblMarginsHeader_j9m3", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 10
@@ -374,13 +315,10 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 100
         .Height = 18
         .Caption = "Margins (inches):"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .Font.Bold = True
         .BackStyle = 0
     End With
 
-    ' Left Margin
+    ' Left Margin Label
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblMarginLeft_k2n9", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 10
@@ -388,24 +326,21 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 35
         .Height = 18
         .Caption = "Left:"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .BackStyle = 0
     End With
 
+    ' Left Margin TextBox
     Set ctrl = formObj.Controls.Add("Forms.TextBox.1", "xpdf_txtMarginLeft_m9k3", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 45
         .Top = 100
         .Width = 50
         .Height = 20
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .Text = "0.25"
         .TextAlign = 3
     End With
 
-    ' Right Margin
+    ' Right Margin Label
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblMarginRight_n7j2", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 105
@@ -413,24 +348,21 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 40
         .Height = 18
         .Caption = "Right:"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .BackStyle = 0
     End With
 
+    ' Right Margin TextBox
     Set ctrl = formObj.Controls.Add("Forms.TextBox.1", "xpdf_txtMarginRight_k8m2", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 145
         .Top = 100
         .Width = 50
         .Height = 20
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .Text = "0.25"
         .TextAlign = 3
     End With
 
-    ' Top Margin
+    ' Top Margin Label
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblMarginTop_j4k8", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 205
@@ -438,24 +370,21 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 35
         .Height = 18
         .Caption = "Top:"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .BackStyle = 0
     End With
 
+    ' Top Margin TextBox
     Set ctrl = formObj.Controls.Add("Forms.TextBox.1", "xpdf_txtMarginTop_m3n7", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 240
         .Top = 100
         .Width = 50
         .Height = 20
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .Text = "0.75"
         .TextAlign = 3
     End With
 
-    ' Bottom Margin
+    ' Bottom Margin Label
     Set ctrl = formObj.Controls.Add("Forms.Label.1", "xpdf_lblMarginBottom_k9j3", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 300
@@ -463,19 +392,16 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 50
         .Height = 18
         .Caption = "Bottom:"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .BackStyle = 0
     End With
 
+    ' Bottom Margin TextBox
     Set ctrl = formObj.Controls.Add("Forms.TextBox.1", "xpdf_txtMarginBottom_n2k8", formObj.Controls("xpdf_frameSettings_n4k9"))
     With ctrl
         .Left = 355
         .Top = 100
         .Width = 50
         .Height = 20
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .Text = "0.75"
         .TextAlign = 3
     End With
@@ -488,13 +414,11 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 250
         .Height = 130
         .Caption = "Advanced Options"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .Font.Bold = True
         .ForeColor = &H8B4F1F
         .BackColor = &HF0F0F0
     End With
 
+    ' Include Headers Checkbox
     Set ctrl = formObj.Controls.Add("Forms.CheckBox.1", "xpdf_chkIncludeHeaders_m4k9", formObj.Controls("xpdf_frameOptions_j8n4"))
     With ctrl
         .Left = 10
@@ -502,12 +426,11 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 230
         .Height = 16
         .Caption = "Include Headers/Footers"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .Value = True
         .BackStyle = 0
     End With
 
+    ' Print Gridlines Checkbox
     Set ctrl = formObj.Controls.Add("Forms.CheckBox.1", "xpdf_chkPrintGridlines_n7k3", formObj.Controls("xpdf_frameOptions_j8n4"))
     With ctrl
         .Left = 10
@@ -515,12 +438,11 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 230
         .Height = 16
         .Caption = "Print Gridlines"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .Value = False
         .BackStyle = 0
     End With
 
+    ' Wrap Long Text Checkbox
     Set ctrl = formObj.Controls.Add("Forms.CheckBox.1", "xpdf_chkWrapLongText_k8m4", formObj.Controls("xpdf_frameOptions_j8n4"))
     With ctrl
         .Left = 10
@@ -528,12 +450,11 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 230
         .Height = 16
         .Caption = "Wrap Long Text (Dense Data)"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .Value = True
         .BackStyle = 0
     End With
 
+    ' Handle Merged Checkbox
     Set ctrl = formObj.Controls.Add("Forms.CheckBox.1", "xpdf_chkHandleMerged_m9j2", formObj.Controls("xpdf_frameOptions_j8n4"))
     With ctrl
         .Left = 10
@@ -541,12 +462,11 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 230
         .Height = 16
         .Caption = "Optimize Merged Cells"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .Value = True
         .BackStyle = 0
     End With
 
+    ' High Quality Checkbox
     Set ctrl = formObj.Controls.Add("Forms.CheckBox.1", "xpdf_chkHighQuality_k3n8", formObj.Controls("xpdf_frameOptions_j8n4"))
     With ctrl
         .Left = 10
@@ -554,8 +474,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 230
         .Height = 16
         .Caption = "High Quality (600 DPI)"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .Value = True
         .BackStyle = 0
     End With
@@ -569,7 +487,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Height = 6
         .BackColor = &H8B4F1F
         .Caption = ""
-        .SpecialEffect = 0
         .Visible = False
     End With
 
@@ -581,8 +498,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 550
         .Height = 18
         .Caption = "Ready"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 8
         .ForeColor = &H808080
         .BackStyle = 0
     End With
@@ -595,9 +510,6 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 100
         .Height = 28
         .Caption = "Generate PDF"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
-        .Font.Bold = True
         .BackColor = &HC0FFC0
     End With
 
@@ -608,20 +520,16 @@ Public Sub xpdf_CreateCompleteUserForm_k9m2x()
         .Width = 95
         .Height = 28
         .Caption = "Close"
-        .Font.Name = "Segoe UI"
-        .Font.Size = 9
         .BackColor = &HE0E0E0
     End With
 
     MsgBox "UserForm '" & formName & "' created successfully!" & vbCrLf & vbCrLf & _
            "Next steps:" & vbCrLf & _
-           "1. Open the VBA Editor (Alt+F11)" & vbCrLf & _
-           "2. Find the form: " & formName & vbCrLf & _
-           "3. Double-click to open it" & vbCrLf & _
-           "4. Right-click > View Code" & vbCrLf & _
-           "5. Paste DELIVERABLE 2 code into the code window" & vbCrLf & _
-           "6. Then add DELIVERABLE 3 as a new standard module" & vbCrLf & _
-           "7. Then add DELIVERABLE 4 as a new class module", vbInformation, "Form Created"
+           "1. Find the form in VBA Project Explorer" & vbCrLf & _
+           "2. Right-click > View Code" & vbCrLf & _
+           "3. Paste DELIVERABLE 2 code" & vbCrLf & _
+           "4. Add DELIVERABLE 3 as standard module" & vbCrLf & _
+           "5. Add DELIVERABLE 4A & 4B as class modules", vbInformation, "Success"
 
     Exit Sub
 
