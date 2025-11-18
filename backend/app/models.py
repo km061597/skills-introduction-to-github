@@ -18,7 +18,7 @@ class Product(Base):
     list_price = Column(DECIMAL(10, 2))
     unit_price = Column(DECIMAL(10, 4), index=True)
     unit_type = Column(String(10))
-    unit_quantity = Column(DECIMAL(10, 2))
+    quantity = Column(DECIMAL(10, 2))
     discount_pct = Column(DECIMAL(5, 2))
     rating = Column(DECIMAL(3, 2), index=True)
     review_count = Column(Integer, default=0)

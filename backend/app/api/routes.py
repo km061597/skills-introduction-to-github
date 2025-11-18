@@ -337,6 +337,74 @@ async def get_category_stats(
     return CategoryStatsResponse.from_orm(stats)
 
 
+@router.post("/compare")
+async def compare_products(
+    asins: List[str],
+    db: Session = Depends(get_db)
+):
+    """
+    Bulk compare multiple products side-by-side
+
+    Accepts a list of ASINs and returns detailed comparison data
+    """
+    if not asins or len(asins) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="At least 2 ASINs are required for comparison"
+        )
+
+    if len(asins) > 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum 10 products can be compared at once"
+        )
+
+    # Fetch all products by ASIN
+    products = []
+    for asin in asins:
+        product = db.query(Product).filter(Product.asin == asin.strip()).first()
+        if product:
+            products.append(product)
+
+    if len(products) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="No products found with the provided ASINs"
+        )
+
+    # Convert to response format
+    product_data = []
+    for product in products:
+        product_data.append({
+            "id": product.id,
+            "asin": product.asin,
+            "title": product.title,
+            "brand": product.brand,
+            "current_price": float(product.current_price) if product.current_price else None,
+            "list_price": float(product.list_price) if product.list_price else None,
+            "unit_price": float(product.unit_price) if product.unit_price else None,
+            "unit_type": product.unit_type,
+            "discount_pct": float(product.discount_pct) if product.discount_pct else None,
+            "rating": float(product.rating) if product.rating else None,
+            "review_count": product.review_count,
+            "image_url": product.image_url,
+            "amazon_url": product.amazon_url,
+            "is_prime": product.is_prime,
+            "is_sponsored": product.is_sponsored,
+            "subscribe_save_pct": float(product.subscribe_save_pct) if product.subscribe_save_pct else None,
+            "in_stock": product.in_stock,
+            "hidden_gem_score": product.hidden_gem_score,
+            "deal_quality_score": product.deal_quality_score
+        })
+
+    return {
+        "count": len(product_data),
+        "requested_asins": asins,
+        "found_count": len(product_data),
+        "products": product_data
+    }
+
+
 # Helper functions
 
 def _generate_cache_key(*args) -> str:
@@ -345,6 +413,102 @@ def _generate_cache_key(*args) -> str:
     """
     cache_data = json.dumps(args, sort_keys=True, default=str)
     return hashlib.md5(cache_data.encode()).hexdigest()
+
+
+@router.get("/product/{product_id}/price-history")
+async def get_product_price_history(
+    product_id: int,
+    days: int = Query(default=30, ge=1, le=365, description="Number of days to retrieve"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get price history for a specific product
+
+    Returns historical price data for charting and analysis
+    """
+    from ..services.price_history import PriceHistoryService
+
+    # Verify product exists
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    # Get price history
+    history = PriceHistoryService.get_price_history(db, product_id, days)
+
+    # Get statistics
+    stats = PriceHistoryService.get_price_statistics(db, product_id, days)
+
+    # Get best price time
+    best_time = PriceHistoryService.get_best_price_time(db, product_id, days=90)
+
+    return {
+        "product_id": product_id,
+        "asin": product.asin,
+        "title": product.title,
+        "current_price": float(product.current_price) if product.current_price else None,
+        "history": history,
+        "statistics": stats,
+        "best_price_time": best_time
+    }
+
+
+@router.get("/price-drops")
+async def get_recent_price_drops(
+    min_drop_percentage: float = Query(default=10.0, ge=1.0, le=100.0, description="Minimum price drop percentage"),
+    hours: int = Query(default=24, ge=1, le=168, description="Time window in hours"),
+    limit: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """
+    Get products with recent significant price drops
+
+    Great for finding flash sales and limited-time deals
+    """
+    from ..services.price_history import PriceHistoryService
+
+    price_drops = PriceHistoryService.get_price_drop_alerts(
+        db,
+        min_drop_percentage=min_drop_percentage,
+        hours=hours
+    )
+
+    # Limit results
+    price_drops = price_drops[:limit]
+
+    return {
+        "count": len(price_drops),
+        "min_drop_percentage": min_drop_percentage,
+        "time_window_hours": hours,
+        "products": price_drops
+    }
+
+
+@router.get("/product/{product_id}/statistics")
+async def get_product_statistics(
+    product_id: int,
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db)
+):
+    """
+    Get detailed price statistics for a product
+
+    Includes min/max/avg prices, trends, and recommendations
+    """
+    from ..services.price_history import PriceHistoryService
+
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    stats = PriceHistoryService.get_price_statistics(db, product_id, days)
+
+    return {
+        "product_id": product_id,
+        "asin": product.asin,
+        "title": product.title,
+        "statistics": stats
+    }
 
 
 def _upsert_product(db: Session, product_data: dict):

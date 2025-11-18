@@ -16,7 +16,7 @@ class ProductBase(BaseModel):
     list_price: Optional[Decimal] = None
     unit_price: Optional[Decimal] = None
     unit_type: Optional[str] = None
-    unit_quantity: Optional[Decimal] = None
+    quantity: Optional[Decimal] = None
     discount_pct: Optional[Decimal] = None
     rating: Optional[Decimal] = None
     review_count: Optional[int] = 0
