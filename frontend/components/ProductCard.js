@@ -65,11 +65,11 @@ export default function ProductCard({ product }) {
       <div className="mb-3">
         <div className="flex items-baseline gap-2 mb-1">
           <span className="text-2xl font-bold text-gray-900">
-            ${current_price?.toFixed(2) || 'N/A'}
+            ${current_price ? Number(current_price).toFixed(2) : 'N/A'}
           </span>
-          {list_price && list_price > current_price && (
+          {list_price && Number(list_price) > Number(current_price) && (
             <span className="text-sm text-gray-500 line-through">
-              ${list_price.toFixed(2)}
+              ${Number(list_price).toFixed(2)}
             </span>
           )}
         </div>
@@ -78,7 +78,7 @@ export default function ProductCard({ product }) {
         {unit_price && (
           <div className="mb-2">
             <span className="text-lg font-bold text-blue-600">
-              ${unit_price.toFixed(4)}/{unit_type}
+              ${Number(unit_price).toFixed(4)}/{unit_type}
             </span>
           </div>
         )}
@@ -87,7 +87,7 @@ export default function ProductCard({ product }) {
         {discount_pct && discount_pct > 0 && (
           <div className="flex items-center gap-2 text-sm">
             <span className="px-2 py-1 bg-red-100 text-red-800 rounded">
-              -{discount_pct.toFixed(0)}% OFF
+              -{Number(discount_pct).toFixed(0)}% OFF
             </span>
           </div>
         )}
@@ -95,7 +95,7 @@ export default function ProductCard({ product }) {
         {/* Savings vs Category */}
         {savings_vs_category && savings_vs_category > 0 && (
           <p className="text-sm text-green-600 font-medium mt-1">
-            📉 {savings_vs_category.toFixed(0)}% below category average
+            📉 {Number(savings_vs_category).toFixed(0)}% below category average
           </p>
         )}
       </div>
@@ -106,7 +106,7 @@ export default function ProductCard({ product }) {
           <div className="flex items-center">
             <span className="text-yellow-400">★</span>
             <span className="ml-1 text-sm font-medium text-gray-700">
-              {rating.toFixed(1)}
+              {Number(rating).toFixed(1)}
             </span>
           </div>
           {review_count && (
@@ -129,7 +129,7 @@ export default function ProductCard({ product }) {
         )}
         {subscribe_save_pct && (
           <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">
-            📦 S&S -{subscribe_save_pct.toFixed(0)}%
+            📦 S&S -{Number(subscribe_save_pct).toFixed(0)}%
           </span>
         )}
       </div>

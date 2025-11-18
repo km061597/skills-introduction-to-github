@@ -10,6 +10,7 @@ import uvicorn
 
 from .api.routes import router as api_router
 from .database import init_db
+from .init_data import init_sample_data
 
 # Create FastAPI app
 app = FastAPI(
@@ -41,7 +42,9 @@ async def startup_event():
     print("🚀 Starting SmartAmazon Search API...")
     print("📊 Initializing database...")
     init_db()
-    print("✅ Database initialized")
+    print("✅ Database tables created")
+    print("📦 Loading sample data...")
+    init_sample_data()
     print("🔍 API ready at http://localhost:8000/api/docs")
 
 
