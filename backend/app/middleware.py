@@ -15,6 +15,17 @@ from datetime import datetime, timedelta
 from .logging_config import set_request_context, clear_request_context, get_logger
 from .exceptions import RateLimitError, handle_exception
 
+# Try to import prometheus metrics, but don't fail if not available
+try:
+    from .monitoring import (
+        http_requests_total,
+        http_request_duration_seconds,
+        http_requests_in_progress
+    )
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+
 
 logger = get_logger(__name__)
 
@@ -193,3 +204,61 @@ class CORSSecurityMiddleware(BaseHTTPMiddleware):
             response.headers['Access-Control-Max-Age'] = '3600'
 
         return response
+
+
+class PrometheusMiddleware(BaseHTTPMiddleware):
+    """
+    Prometheus metrics collection middleware
+
+    Tracks:
+    - Request count by method, endpoint, and status
+    - Request duration histogram
+    - Requests in progress gauge
+    """
+
+    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        if not PROMETHEUS_AVAILABLE:
+            # If Prometheus monitoring is not available, just pass through
+            return await call_next(request)
+
+        # Skip metrics for the metrics endpoint itself
+        if request.url.path == "/metrics":
+            return await call_next(request)
+
+        # Increment in-progress gauge
+        http_requests_in_progress.inc()
+
+        start_time = time.time()
+        status_code = 500  # Default to 500 in case of exception
+
+        try:
+            response = await call_next(request)
+            status_code = response.status_code
+            return response
+        except Exception as e:
+            # Record the exception
+            status_code = 500
+            raise
+        finally:
+            # Record metrics
+            duration = time.time() - start_time
+
+            # Get endpoint path (remove query params)
+            endpoint = request.url.path
+            method = request.method
+
+            # Increment request counter
+            http_requests_total.labels(
+                method=method,
+                endpoint=endpoint,
+                status=status_code
+            ).inc()
+
+            # Record request duration
+            http_request_duration_seconds.labels(
+                method=method,
+                endpoint=endpoint
+            ).observe(duration)
+
+            # Decrement in-progress gauge
+            http_requests_in_progress.dec()
