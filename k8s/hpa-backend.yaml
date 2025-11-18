@@ -1,0 +1,60 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: smartamazon-backend-hpa
+  namespace: smartamazon
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: smartamazon-backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    # Scale based on CPU utilization
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70  # Target 70% CPU
+
+    # Scale based on memory utilization
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80  # Target 80% memory
+
+    # Scale based on request rate (custom metric)
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "1000"  # 1000 requests per second per pod
+
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 minutes before scaling down
+      policies:
+        - type: Percent
+          value: 50  # Scale down by max 50% of current pods
+          periodSeconds: 60
+        - type: Pods
+          value: 2  # Scale down by max 2 pods at a time
+          periodSeconds: 60
+      selectPolicy: Min  # Use the policy that scales down slowest
+
+    scaleUp:
+      stabilizationWindowSeconds: 0  # Scale up immediately
+      policies:
+        - type: Percent
+          value: 100  # Can double pods
+          periodSeconds: 15
+        - type: Pods
+          value: 4  # Add up to 4 pods at once
+          periodSeconds: 15
+      selectPolicy: Max  # Use the policy that scales up fastest
