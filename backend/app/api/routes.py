@@ -337,6 +337,74 @@ async def get_category_stats(
     return CategoryStatsResponse.from_orm(stats)
 
 
+@router.post("/compare")
+async def compare_products(
+    asins: List[str],
+    db: Session = Depends(get_db)
+):
+    """
+    Bulk compare multiple products side-by-side
+
+    Accepts a list of ASINs and returns detailed comparison data
+    """
+    if not asins or len(asins) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="At least 2 ASINs are required for comparison"
+        )
+
+    if len(asins) > 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum 10 products can be compared at once"
+        )
+
+    # Fetch all products by ASIN
+    products = []
+    for asin in asins:
+        product = db.query(Product).filter(Product.asin == asin.strip()).first()
+        if product:
+            products.append(product)
+
+    if len(products) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="No products found with the provided ASINs"
+        )
+
+    # Convert to response format
+    product_data = []
+    for product in products:
+        product_data.append({
+            "id": product.id,
+            "asin": product.asin,
+            "title": product.title,
+            "brand": product.brand,
+            "current_price": float(product.current_price) if product.current_price else None,
+            "list_price": float(product.list_price) if product.list_price else None,
+            "unit_price": float(product.unit_price) if product.unit_price else None,
+            "unit_type": product.unit_type,
+            "discount_pct": float(product.discount_pct) if product.discount_pct else None,
+            "rating": float(product.rating) if product.rating else None,
+            "review_count": product.review_count,
+            "image_url": product.image_url,
+            "amazon_url": product.amazon_url,
+            "is_prime": product.is_prime,
+            "is_sponsored": product.is_sponsored,
+            "subscribe_save_pct": float(product.subscribe_save_pct) if product.subscribe_save_pct else None,
+            "in_stock": product.in_stock,
+            "hidden_gem_score": product.hidden_gem_score,
+            "deal_quality_score": product.deal_quality_score
+        })
+
+    return {
+        "count": len(product_data),
+        "requested_asins": asins,
+        "found_count": len(product_data),
+        "products": product_data
+    }
+
+
 # Helper functions
 
 def _generate_cache_key(*args) -> str:
