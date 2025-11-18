@@ -1,0 +1,3 @@
+"""
+SmartAmazon Backend Tests
+"""
