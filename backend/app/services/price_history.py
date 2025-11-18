@@ -46,6 +46,11 @@ class PriceHistoryService:
         Returns:
             Created PriceHistory record
         """
+        # Get product to get ASIN
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise ValueError(f"Product with id {product_id} not found")
+
         # Check if price changed from last record
         last_record = db.query(PriceHistory).filter(
             PriceHistory.product_id == product_id
@@ -67,6 +72,7 @@ class PriceHistoryService:
         # Create new price record
         price_record = PriceHistory(
             product_id=product_id,
+            asin=product.asin,
             price=price,
             unit_price=unit_price,
             is_prime=is_prime,
