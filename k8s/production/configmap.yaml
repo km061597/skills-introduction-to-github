@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smartamazon-config
+  namespace: smartamazon
+  labels:
+    app: smartamazon
+    environment: production
+data:
+  # Application
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  DEBUG: "false"
+
+  # Database
+  DATABASE_HOST: "postgres"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "smartamazon"
+
+  # Redis
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+
+  # API Configuration
+  API_CORS_ORIGINS: "https://smartamazon.com,https://www.smartamazon.com"
+  API_RATE_LIMIT: "100"
+
+  # Scraper Configuration
+  SCRAPER_ENABLED: "true"
+  SCRAPER_DELAY: "2.0"
+  SCRAPER_MAX_PAGES: "5"
+
+  # Email Configuration (SMTP)
+  SMTP_HOST: "smtp.sendgrid.net"
+  SMTP_PORT: "587"
+  FROM_NAME: "SmartAmazon Alerts"
+
+  # Monitoring
+  PROMETHEUS_ENABLED: "true"
+  METRICS_PORT: "9090"
+
+  # Feature Flags
+  FEATURE_PRICE_ALERTS: "true"
+  FEATURE_EMAIL_NOTIFICATIONS: "true"
+  FEATURE_WEEKLY_DIGEST: "true"
