@@ -1,0 +1,101 @@
+SmartAmazon Database Migrations
+================================
+
+This directory contains Alembic database migrations for the SmartAmazon platform.
+
+## Quick Start
+
+### Running Migrations
+
+```bash
+# Upgrade to the latest version
+alembic upgrade head
+
+# Downgrade one version
+alembic downgrade -1
+
+# Show current version
+alembic current
+
+# Show migration history
+alembic history --verbose
+```
+
+### Creating New Migrations
+
+```bash
+# Auto-generate migration from model changes
+alembic revision --autogenerate -m "Description of changes"
+
+# Create empty migration
+alembic revision -m "Description of changes"
+
+# Edit the generated file in alembic/versions/
+# Then run: alembic upgrade head
+```
+
+## Migration Files
+
+- `env.py` - Alembic environment configuration
+- `script.py.mako` - Template for new migrations
+- `versions/` - Directory containing all migration scripts
+
+## Initial Migration
+
+`001_initial_schema.py` - Creates initial database schema:
+- users table
+- products table
+- price_history table
+- search_queries table
+- price_alerts table
+
+## Best Practices
+
+1. **Always review auto-generated migrations** - Alembic may not detect all changes correctly
+2. **Test migrations in development first** - Run both upgrade and downgrade
+3. **Never modify existing migrations** - Create new ones instead
+4. **Keep migrations small and focused** - One logical change per migration
+5. **Write meaningful commit messages** - Describe what changed and why
+6. **Backup database before production migrations** - Safety first
+
+## Production Deployment
+
+```bash
+# 1. Backup database
+pg_dump -U postgres smartamazon > backup_$(date +%Y%m%d_%H%M%S).sql
+
+# 2. Run migrations
+alembic upgrade head
+
+# 3. Verify
+alembic current
+```
+
+## Rollback
+
+If a migration fails:
+
+```bash
+# Rollback to previous version
+alembic downgrade -1
+
+# Or rollback to specific version
+alembic downgrade <revision_id>
+
+# Restore from backup if necessary
+psql -U postgres smartamazon < backup_file.sql
+```
+
+## Common Issues
+
+### "Can't locate revision identified by..."
+- The database alembic_version table is out of sync
+- Fix: `alembic stamp head` to reset
+
+### "Target database is not up to date"
+- Migrations haven't been run
+- Fix: `alembic upgrade head`
+
+### "Multiple heads detected"
+- Conflicting migration branches
+- Fix: Merge the branches with `alembic merge heads`

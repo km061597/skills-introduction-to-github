@@ -235,7 +235,7 @@ class AmazonScraper:
             if unit_price:
                 product['unit_price'] = float(unit_price)
                 product['unit_type'] = unit_type
-                product['unit_quantity'] = quantity
+                product['quantity'] = quantity
 
         # Stock status
         product['in_stock'] = True  # Assume in stock if listed
@@ -363,7 +363,7 @@ class MockAmazonScraper(AmazonScraper):
                 'discount_pct': 21.43,
                 'unit_price': 0.69,
                 'unit_type': 'oz',
-                'unit_quantity': 80.0,
+                'quantity': 80.0,
                 'rating': 4.6,
                 'review_count': 124030,
                 'image_url': 'https://via.placeholder.com/300',
@@ -382,7 +382,7 @@ class MockAmazonScraper(AmazonScraper):
                 'discount_pct': 18.18,
                 'unit_price': 0.94,
                 'unit_type': 'oz',
-                'unit_quantity': 48.0,
+                'quantity': 48.0,
                 'rating': 4.5,
                 'review_count': 82340,
                 'image_url': 'https://via.placeholder.com/300',
@@ -401,7 +401,7 @@ class MockAmazonScraper(AmazonScraper):
                 'discount_pct': 25.0,
                 'unit_price': 0.85,
                 'unit_type': 'oz',
-                'unit_quantity': 35.2,
+                'quantity': 35.2,
                 'rating': 4.4,
                 'review_count': 34210,
                 'image_url': 'https://via.placeholder.com/300',
@@ -420,7 +420,7 @@ class MockAmazonScraper(AmazonScraper):
                 'discount_pct': 16.67,
                 'unit_price': 0.62,
                 'unit_type': 'oz',
-                'unit_quantity': 80.64,
+                'quantity': 80.64,
                 'rating': 4.5,
                 'review_count': 56780,
                 'image_url': 'https://via.placeholder.com/300',

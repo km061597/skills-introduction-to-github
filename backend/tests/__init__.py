@@ -1,3 +1,1 @@
-"""
-SmartAmazon Backend Tests
-"""
+"""Test suite for SmartAmazon API"""
