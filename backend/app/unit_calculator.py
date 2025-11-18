@@ -365,5 +365,90 @@ class UnitPriceCalculator(UnitCalculator):
         return {
             'quantity': Decimal(str(quantity)) if quantity is not None else None,
             'unit': unit,
+            'unit_type': unit_type if unit_type is not None else UnitType.UNKNOWN
+        }
+
+    @staticmethod
+    def convert_to_standard_unit(quantity: Decimal, unit: str, unit_type: 'UnitType') -> Decimal:
+        """
+        Convert to standard unit (compatibility method)
+
+        Args:
+            quantity: Quantity to convert
+            unit: Unit to convert from
+            unit_type: Type of unit
+
+        Returns:
+            Converted quantity in standard units
+        """
+        normalized_qty, normalized_unit = UnitCalculator.normalize_to_standard_unit(
+            float(quantity), unit
+        )
+        return Decimal(str(normalized_qty)) if normalized_qty is not None else quantity
+
+    @staticmethod
+    def calculate_unit_price(price: Decimal, quantity: Decimal, unit: str) -> Optional[Decimal]:
+        """
+        Calculate unit price (compatibility method)
+
+        Args:
+            price: Product price
+            quantity: Product quantity
+            unit: Unit type
+
+        Returns:
+            Price per unit or None
+        """
+        if price < 0:
+            return None
+        return UnitCalculator.calculate_unit_price(price, float(quantity), unit)
+
+    @staticmethod
+    def calculate_from_title(title: str, price: Decimal) -> dict:
+        """
+        Complete unit price calculation from title (compatibility method)
+
+        Args:
+            title: Product title
+            price: Product price
+
+        Returns:
+            Dictionary with all calculation results
+        """
+        # Extract unit info
+        quantity, unit = UnitCalculator.extract_unit_from_title(title)
+
+        if not quantity or not unit:
+            return {
+                'unit_price': None,
+                'quantity': None,
+                'unit': None,
+                'unit_type': None
+            }
+
+        # Normalize to standard units
+        normalized_qty, normalized_unit = UnitCalculator.normalize_to_standard_unit(quantity, unit)
+
+        # Determine unit type
+        type_str = UnitCalculator.get_unit_type(normalized_unit or unit)
+        unit_type = UnitType.UNKNOWN
+        if type_str == "weight":
+            unit_type = UnitType.WEIGHT
+        elif type_str == "volume":
+            unit_type = UnitType.VOLUME
+        elif type_str == "count":
+            unit_type = UnitType.COUNT
+
+        # Calculate unit price
+        unit_price = UnitCalculator.calculate_unit_price(
+            price,
+            normalized_qty if normalized_qty is not None else quantity,
+            normalized_unit if normalized_unit is not None else unit
+        )
+
+        return {
+            'unit_price': unit_price,
+            'quantity': Decimal(str(normalized_qty)) if normalized_qty is not None else Decimal(str(quantity)),
+            'unit': normalized_unit if normalized_unit is not None else unit,
             'unit_type': unit_type
         }

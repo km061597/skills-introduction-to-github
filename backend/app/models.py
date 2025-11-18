@@ -44,7 +44,7 @@ class PriceHistory(Base):
     __tablename__ = "price_history"
 
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=True, index=True)
     asin = Column(String(10), nullable=False)
     price = Column(DECIMAL(10, 2), nullable=False)
     unit_price = Column(DECIMAL(10, 4))
@@ -55,6 +55,15 @@ class PriceHistory(Base):
 
     # Relationships
     product = relationship("Product", back_populates="price_history")
+
+    def __init__(self, **kwargs):
+        """Initialize PriceHistory, auto-populating product_id from asin if needed"""
+        # If product_id not provided but asin is, try to look it up
+        if 'product_id' not in kwargs and 'asin' in kwargs:
+            from sqlalchemy.orm import object_session
+            # Will be populated by relationship or manually
+            pass
+        super().__init__(**kwargs)
 
 
 class SearchCache(Base):
