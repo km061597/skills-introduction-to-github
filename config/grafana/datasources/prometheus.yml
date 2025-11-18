@@ -1,0 +1,115 @@
+# Grafana Datasources Configuration
+# This file configures data sources for Grafana dashboards
+
+apiVersion: 1
+
+# List of data sources
+datasources:
+  # Prometheus for metrics
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+      queryTimeout: 60s
+      # Alerting configuration
+      manageAlerts: true
+      # Exemplars configuration
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+
+  # Elasticsearch for logs
+  - name: Elasticsearch
+    type: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    database: "[smartamazon-logs-]YYYY.MM.DD"
+    jsonData:
+      esVersion: "8.0.0"
+      timeField: "@timestamp"
+      interval: Daily
+      logMessageField: message
+      logLevelField: log_level
+
+  # Loki for logs (alternative to Elasticsearch)
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        - datasourceUid: tempo
+          matcherRegex: "trace_id=(\\w+)"
+          name: TraceID
+          url: "$${__value.raw}"
+
+  # Tempo for distributed tracing (optional)
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    uid: tempo
+    editable: true
+    jsonData:
+      httpMethod: GET
+      tracesToLogs:
+        datasourceUid: loki
+        tags: ['job', 'instance', 'pod', 'namespace']
+        mappedTags: [{ key: 'service.name', value: 'service' }]
+        mapTagNamesEnabled: false
+        spanStartTimeShift: '1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: false
+        filterBySpanID: false
+      serviceMap:
+        datasourceUid: prometheus
+      search:
+        hide: false
+      nodeGraph:
+        enabled: true
+
+  # PostgreSQL for direct database queries
+  - name: PostgreSQL
+    type: postgres
+    url: postgres:5432
+    database: smartamazon
+    user: ${POSTGRES_USER}
+    secureJsonData:
+      password: ${POSTGRES_PASSWORD}
+    jsonData:
+      sslmode: disable
+      maxOpenConns: 10
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+      postgresVersion: 1500
+      timescaledb: false
+
+  # Redis for cache monitoring (via Prometheus exporter)
+  - name: Redis
+    type: prometheus
+    access: proxy
+    url: http://redis-exporter:9121
+    editable: true
+    jsonData:
+      httpMethod: POST
+
+  # Node Exporter for system metrics
+  - name: Node Exporter
+    type: prometheus
+    access: proxy
+    url: http://node-exporter:9100
+    editable: true
+    jsonData:
+      httpMethod: POST
+
+deleteDatasources:
+  # Remove old/unused datasources
+  - name: TestData
+  - name: Example

@@ -10,7 +10,8 @@ DROP TABLE IF EXISTS user_searches CASCADE;
 
 -- Products table - Core product information
 CREATE TABLE products (
-    asin VARCHAR(10) PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
+    asin VARCHAR(10) UNIQUE NOT NULL,
     title TEXT NOT NULL,
     brand VARCHAR(255),
     category VARCHAR(255),
@@ -37,6 +38,7 @@ CREATE TABLE products (
 );
 
 -- Create indexes for products table
+CREATE INDEX idx_products_asin ON products(asin);
 CREATE INDEX idx_products_category ON products(category);
 CREATE INDEX idx_products_brand ON products(brand);
 CREATE INDEX idx_products_unit_price ON products(unit_price);
@@ -48,13 +50,18 @@ CREATE INDEX idx_products_discount_pct ON products(discount_pct);
 -- Price history table - Track price changes over time
 CREATE TABLE price_history (
     id SERIAL PRIMARY KEY,
-    asin VARCHAR(10) NOT NULL REFERENCES products(asin) ON DELETE CASCADE,
+    product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    asin VARCHAR(10) NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     unit_price DECIMAL(10, 4),
+    is_prime BOOLEAN DEFAULT FALSE,
+    is_sponsored BOOLEAN DEFAULT FALSE,
+    in_stock BOOLEAN DEFAULT TRUE,
     recorded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for price_history table
+CREATE INDEX idx_price_history_product_id ON price_history(product_id);
 CREATE INDEX idx_price_history_asin ON price_history(asin);
 CREATE INDEX idx_price_history_recorded_at ON price_history(recorded_at);
 

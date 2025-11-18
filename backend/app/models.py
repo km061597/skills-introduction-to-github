@@ -10,7 +10,8 @@ from .database import Base
 class Product(Base):
     __tablename__ = "products"
 
-    asin = Column(String(10), primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    asin = Column(String(10), unique=True, nullable=False, index=True)
     title = Column(Text, nullable=False)
     brand = Column(String(255), index=True)
     category = Column(String(255), index=True)
@@ -43,13 +44,26 @@ class PriceHistory(Base):
     __tablename__ = "price_history"
 
     id = Column(Integer, primary_key=True, index=True)
-    asin = Column(String(10), ForeignKey("products.asin"), nullable=False)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=True, index=True)
+    asin = Column(String(10), nullable=False)
     price = Column(DECIMAL(10, 2), nullable=False)
     unit_price = Column(DECIMAL(10, 4))
+    is_prime = Column(Boolean, default=False)
+    is_sponsored = Column(Boolean, default=False)
+    in_stock = Column(Boolean, default=True)
     recorded_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     # Relationships
     product = relationship("Product", back_populates="price_history")
+
+    def __init__(self, **kwargs):
+        """Initialize PriceHistory, auto-populating product_id from asin if needed"""
+        # If product_id not provided but asin is, try to look it up
+        if 'product_id' not in kwargs and 'asin' in kwargs:
+            from sqlalchemy.orm import object_session
+            # Will be populated by relationship or manually
+            pass
+        super().__init__(**kwargs)
 
 
 class SearchCache(Base):

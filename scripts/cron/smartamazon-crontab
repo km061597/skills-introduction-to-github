@@ -1,0 +1,107 @@
+# SmartAmazon Cron Jobs
+# Install with: crontab -u smartamazon smartamazon-crontab
+
+# Set shell and path
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+SMARTAMAZON_HOME=/opt/smartamazon
+
+# Email notifications
+MAILTO=ops@smartamazon.com
+
+# ==========================================
+# Database Backups
+# ==========================================
+
+# Daily backup at 2 AM (with S3 upload)
+0 2 * * * cd $SMARTAMAZON_HOME && ./scripts/backup/backup-database.sh --upload-s3 >> /var/log/smartamazon/backup.log 2>&1
+
+# Weekly full backup on Sunday at 3 AM
+0 3 * * 0 cd $SMARTAMAZON_HOME && BACKUP_TYPE=full ./scripts/backup/backup-database.sh --upload-s3 >> /var/log/smartamazon/backup-weekly.log 2>&1
+
+# ==========================================
+# Health Checks & Monitoring
+# ==========================================
+
+# Health check every 5 minutes
+*/5 * * * * cd $SMARTAMAZON_HOME && ./scripts/monitoring/health-check.sh --send-alerts >> /var/log/smartamazon/health-check.log 2>&1
+
+# Disk space check every hour
+0 * * * * df -h | awk '$5+0 > 80 {print "Disk space warning: "$0}' | mail -s "Disk Space Alert" ops@smartamazon.com
+
+# Memory check every 15 minutes
+*/15 * * * * free | awk '/Mem:/ {if (($3/$2)*100 > 90) print "Memory usage at "($3/$2)*100"%"}' | mail -s "Memory Alert" ops@smartamazon.com
+
+# ==========================================
+# Cleanup & Maintenance
+# ==========================================
+
+# Clean old logs daily at midnight
+0 0 * * * find /var/log/smartamazon -name "*.log" -mtime +30 -delete
+
+# Clean old Docker images weekly on Saturday
+0 4 * * 6 docker system prune -af --filter "until=168h" >> /var/log/smartamazon/docker-cleanup.log 2>&1
+
+# Clean Redis expired keys daily at 4 AM
+0 4 * * * docker exec smartamazon-redis redis-cli SAVE >> /var/log/smartamazon/redis-save.log 2>&1
+
+# ==========================================
+# Database Maintenance
+# ==========================================
+
+# Vacuum database weekly on Sunday at 4 AM
+0 4 * * 0 docker exec smartamazon-db psql -U postgres -d smartamazon -c "VACUUM ANALYZE;" >> /var/log/smartamazon/vacuum.log 2>&1
+
+# Update database statistics daily at 5 AM
+0 5 * * * docker exec smartamazon-db psql -U postgres -d smartamazon -c "ANALYZE;" >> /var/log/smartamazon/analyze.log 2>&1
+
+# ==========================================
+# Metrics & Reporting
+# ==========================================
+
+# Generate daily metrics report at 9 AM
+0 9 * * * cd $SMARTAMAZON_HOME && ./scripts/monitoring/generate-report.sh daily >> /var/log/smartamazon/reports.log 2>&1
+
+# Generate weekly report on Monday at 10 AM
+0 10 * * 1 cd $SMARTAMAZON_HOME && ./scripts/monitoring/generate-report.sh weekly >> /var/log/smartamazon/reports.log 2>&1
+
+# ==========================================
+# SSL Certificate Renewal
+# ==========================================
+
+# Check SSL certificate expiration weekly
+0 6 * * 1 cd $SMARTAMAZON_HOME && ./scripts/monitoring/check-ssl-expiry.sh >> /var/log/smartamazon/ssl-check.log 2>&1
+
+# Renew Let's Encrypt certificates (if using certbot)
+0 3 * * * certbot renew --quiet --deploy-hook "docker-compose restart nginx" >> /var/log/smartamazon/certbot.log 2>&1
+
+# ==========================================
+# Application-Specific Tasks
+# ==========================================
+
+# Update category statistics hourly
+0 * * * * cd $SMARTAMAZON_HOME && docker exec smartamazon-api python -m app.tasks.update_category_stats >> /var/log/smartamazon/category-stats.log 2>&1
+
+# Clear old search cache daily at 6 AM
+0 6 * * * cd $SMARTAMAZON_HOME && docker exec smartamazon-redis redis-cli --scan --pattern "smartamazon:search:*" | xargs redis-cli DEL >> /var/log/smartamazon/cache-cleanup.log 2>&1
+
+# Update price history for tracked products every 4 hours
+0 */4 * * * cd $SMARTAMAZON_HOME && docker exec smartamazon-api python -m app.tasks.update_price_history >> /var/log/smartamazon/price-history.log 2>&1
+
+# ==========================================
+# Load Testing (Optional)
+# ==========================================
+
+# Run load test weekly on Saturday at midnight (off-peak)
+# 0 0 * * 6 cd $SMARTAMAZON_HOME && k6 run scripts/load-test/load-test.js >> /var/log/smartamazon/load-test.log 2>&1
+
+# ==========================================
+# Log Rotation Trigger
+# ==========================================
+
+# Force log rotation daily at 11 PM
+0 23 * * * /usr/sbin/logrotate /etc/logrotate.d/smartamazon --force >> /var/log/smartamazon/logrotate.log 2>&1
+
+# ==========================================
+# End of crontab
+# ==========================================

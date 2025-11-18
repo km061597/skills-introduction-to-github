@@ -1,0 +1,220 @@
+# Prometheus Alerting Rules for SmartAmazon
+#
+# These rules define conditions that trigger alerts
+
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+      # API is down
+      - alert: APIDown
+        expr: up{job="smartamazon-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "SmartAmazon API is down"
+          description: "The API has been down for more than 1 minute."
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API error rate"
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # High latency
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API latency"
+          description: "95th percentile latency is {{ $value }}s (threshold: 2s)"
+
+      # Too many requests (potential DDoS)
+      - alert: HighRequestRate
+        expr: rate(http_requests_total[1m]) > 1000
+        for: 2m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Very high request rate"
+          description: "Request rate is {{ $value }} req/s (threshold: 1000 req/s)"
+
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # Database is down
+      - alert: DatabaseDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "Database has been unreachable for more than 1 minute."
+
+      # Too many connections
+      - alert: TooManyDatabaseConnections
+        expr: pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High number of database connections"
+          description: "{{ $value }} active connections (threshold: 80)"
+
+      # Slow queries
+      - alert: SlowQueries
+        expr: rate(database_queries_duration_seconds_sum[5m]) / rate(database_queries_duration_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Database queries are slow"
+          description: "Average query time is {{ $value }}s (threshold: 1s)"
+
+  - name: cache_alerts
+    interval: 30s
+    rules:
+      # Redis is down
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache has been unreachable for more than 1 minute."
+
+      # Low cache hit rate
+      - alert: LowCacheHitRate
+        expr: rate(cache_operations_total{operation="hit"}[5m]) / rate(cache_operations_total[5m]) < 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} (threshold: 50%)"
+
+      # Redis memory usage high
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using {{ $value | humanizePercentage }} of available memory (threshold: 90%)"
+
+  - name: system_alerts
+    interval: 30s
+    rules:
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }} (threshold: 80%)"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }} (threshold: 85%)"
+
+      # Low disk space
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Low disk space"
+          description: "Only {{ $value }}% disk space remaining on {{ $labels.instance }} (threshold: 15%)"
+
+      # Container restarting
+      - alert: ContainerRestarting
+        expr: rate(container_last_seen[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          component: container
+        annotations:
+          summary: "Container is restarting frequently"
+          description: "Container {{ $labels.name }} is restarting"
+
+  - name: business_alerts
+    interval: 1m
+    rules:
+      # No searches in last 10 minutes (potential issue)
+      - alert: NoSearchActivity
+        expr: rate(http_requests_total{endpoint="/api/search"}[10m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "No search activity"
+          description: "No searches have been performed in the last 10 minutes. This might indicate an issue."
+
+      # Scraper failing
+      - alert: ScraperFailing
+        expr: rate(scraper_requests_total{status="error"}[5m]) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          component: scraper
+        annotations:
+          summary: "Scraper error rate is high"
+          description: "Scraper error rate is {{ $value | humanizePercentage }} (threshold: 50%)"
+
+  - name: sla_alerts
+    interval: 1m
+    rules:
+      # SLA violation - availability
+      - alert: SLAAvailabilityViolation
+        expr: avg_over_time(up{job="smartamazon-api"}[1h]) < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          component: sla
+        annotations:
+          summary: "SLA availability violation"
+          description: "API availability over last hour is {{ $value | humanizePercentage }} (SLA: 99.9%)"
+
+      # SLA violation - latency
+      - alert: SLALatencyViolation
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[1h])) > 3
+        for: 10m
+        labels:
+          severity: warning
+          component: sla
+        annotations:
+          summary: "SLA latency violation"
+          description: "95th percentile latency over last hour is {{ $value }}s (SLA: 3s)"

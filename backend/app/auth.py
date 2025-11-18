@@ -209,3 +209,11 @@ class RoleChecker:
 # @app.get("/admin/users", dependencies=[Depends(RoleChecker(["admin"]))])
 # async def get_users():
 #     return {"users": []}
+
+
+# Backward compatibility aliases for tests
+create_access_token = AuthService.create_access_token
+create_refresh_token = AuthService.create_refresh_token
+verify_token = AuthService.decode_token
+get_password_hash = AuthService.hash_password
+verify_password = AuthService.verify_password

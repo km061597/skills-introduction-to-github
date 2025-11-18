@@ -1,0 +1,229 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smartamazon-backend
+  namespace: smartamazon
+  labels:
+    app: smartamazon-backend
+    tier: backend
+    environment: production
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: smartamazon-backend
+  template:
+    metadata:
+      labels:
+        app: smartamazon-backend
+        tier: backend
+        environment: production
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Security
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      # Service account
+      serviceAccountName: smartamazon-backend
+
+      # Init containers
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z postgres 5432; do
+                echo "Waiting for PostgreSQL..."
+                sleep 2
+              done
+              echo "PostgreSQL is ready!"
+
+        - name: wait-for-redis
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z redis 6379; do
+                echo "Waiting for Redis..."
+                sleep 2
+              done
+              echo "Redis is ready!"
+
+        - name: run-migrations
+          image: smartamazon/backend:latest
+          command: ["alembic", "upgrade", "head"]
+          envFrom:
+            - secretRef:
+                name: smartamazon-secrets
+            - configMapRef:
+                name: smartamazon-config
+
+      # Main container
+      containers:
+        - name: smartamazon-backend
+          image: smartamazon/backend:latest
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          # Environment variables
+          envFrom:
+            - secretRef:
+                name: smartamazon-secrets
+            - configMapRef:
+                name: smartamazon-config
+
+          env:
+            - name: ENVIRONMENT
+              value: "production"
+            - name: APP_VERSION
+              value: "1.0.0"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+
+          # Resource limits
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
+
+          # Startup probe (for slow starts)
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 30
+
+          # Lifecycle hooks
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 15"]
+
+          # Security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+
+          # Volume mounts
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/.cache
+
+      # Volumes
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
+
+      # Pod disruption budget
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - smartamazon-backend
+                topologyKey: kubernetes.io/hostname
+
+      # Tolerations
+      tolerations:
+        - key: "node-role.kubernetes.io/spot"
+          operator: "Exists"
+          effect: "NoSchedule"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smartamazon-backend
+  namespace: smartamazon
+  labels:
+    app: smartamazon-backend
+    tier: backend
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
+      protocol: TCP
+  selector:
+    app: smartamazon-backend
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: smartamazon-backend-pdb
+  namespace: smartamazon
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: smartamazon-backend

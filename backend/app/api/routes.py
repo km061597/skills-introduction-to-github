@@ -535,9 +535,13 @@ def _upsert_product(db: Session, product_data: dict):
             new_price = Decimal(str(product_data['current_price']))
             if new_price != existing.current_price:
                 price_history = PriceHistory(
+                    product_id=existing.id,
                     asin=asin,
                     price=new_price,
-                    unit_price=Decimal(str(product_data.get('unit_price'))) if product_data.get('unit_price') else None
+                    unit_price=Decimal(str(product_data.get('unit_price'))) if product_data.get('unit_price') else None,
+                    is_prime=product_data.get('is_prime', False),
+                    is_sponsored=product_data.get('is_sponsored', False),
+                    in_stock=product_data.get('in_stock', True)
                 )
                 db.add(price_history)
     else:
@@ -549,13 +553,18 @@ def _upsert_product(db: Session, product_data: dict):
 
         product = Product(**product_data)
         db.add(product)
+        db.flush()  # Flush to get the product.id before creating price history
 
         # Add initial price history
         if product_data.get('current_price'):
             price_history = PriceHistory(
+                product_id=product.id,
                 asin=asin,
                 price=Decimal(str(product_data['current_price'])),
-                unit_price=Decimal(str(product_data.get('unit_price'))) if product_data.get('unit_price') else None
+                unit_price=Decimal(str(product_data.get('unit_price'))) if product_data.get('unit_price') else None,
+                is_prime=product_data.get('is_prime', False),
+                is_sponsored=product_data.get('is_sponsored', False),
+                in_stock=product_data.get('in_stock', True)
             )
             db.add(price_history)
 
