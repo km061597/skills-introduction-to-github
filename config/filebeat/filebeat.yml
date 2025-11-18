@@ -1,0 +1,241 @@
+########################## Filebeat Configuration ##########################
+
+# ============================== Filebeat Inputs ===============================
+
+filebeat.inputs:
+  # Backend API logs
+  - type: container
+    enabled: true
+    paths:
+      - '/var/lib/docker/containers/*/*.log'
+
+    processors:
+      - add_docker_metadata:
+          host: "unix:///var/run/docker.sock"
+
+      - decode_json_fields:
+          fields: ["message"]
+          target: "log"
+          overwrite_keys: true
+          add_error_key: true
+
+      - drop_event:
+          when:
+            or:
+              - equals:
+                  container.labels.logging: "false"
+              - regexp:
+                  container.name: "^/filebeat$"
+              - regexp:
+                  container.name: "^/logstash$"
+
+  # Application logs from files
+  - type: log
+    enabled: true
+    paths:
+      - /app/logs/*.log
+      - /var/log/smartamazon/*.log
+
+    fields:
+      service: smartamazon
+      log_type: application
+
+    multiline.pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+    multiline.negate: true
+    multiline.match: after
+
+  # Nginx access logs
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/nginx/access.log
+
+    fields:
+      service: nginx
+      log_type: access
+
+    processors:
+      - dissect:
+          tokenizer: '%{client_ip} - - [%{timestamp}] "%{method} %{url} %{protocol}" %{status} %{bytes} "%{referer}" "%{user_agent}"'
+          field: "message"
+          target_prefix: "nginx"
+
+  # Nginx error logs
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/nginx/error.log
+
+    fields:
+      service: nginx
+      log_type: error
+
+  # PostgreSQL logs
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/postgresql/*.log
+
+    fields:
+      service: postgresql
+      log_type: database
+
+    multiline.pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+    multiline.negate: true
+    multiline.match: after
+
+  # Redis logs
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/redis/*.log
+
+    fields:
+      service: redis
+      log_type: cache
+
+# ============================== Processors ====================================
+
+processors:
+  # Add cloud metadata
+  - add_cloud_metadata: ~
+
+  # Add host metadata
+  - add_host_metadata:
+      when.not.contains.tags: forwarded
+
+  # Add Docker metadata
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+
+  # Add Kubernetes metadata (if running in K8s)
+  - add_kubernetes_metadata:
+      host: ${NODE_NAME}
+      matchers:
+        - logs_path:
+            logs_path: "/var/log/containers/"
+
+  # Drop debug logs in production
+  - drop_event:
+      when:
+        and:
+          - equals:
+              environment: "production"
+          - regexp:
+              log.level: "DEBUG|TRACE"
+
+  # Rename fields
+  - rename:
+      fields:
+        - from: "log.level"
+          to: "log_level"
+        - from: "log.message"
+          to: "message"
+      ignore_missing: true
+      fail_on_error: false
+
+# ============================== Outputs =======================================
+
+# Output to Logstash
+output.logstash:
+  hosts: ["${LOGSTASH_HOST:logstash:5044}"]
+
+  # Load balance across multiple Logstash instances
+  loadbalance: true
+
+  # Enable SSL (optional, for production)
+  # ssl.enabled: true
+  # ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+  # ssl.certificate: "/etc/pki/client/cert.pem"
+  # ssl.key: "/etc/pki/client/cert.key"
+
+  # Compression
+  compression_level: 3
+
+  # Bulk settings
+  bulk_max_size: 2048
+
+  # Timeout
+  timeout: 30
+
+# Alternative: Output directly to Elasticsearch (uncomment to use)
+# output.elasticsearch:
+#   hosts: ["${ELASTICSEARCH_HOST:elasticsearch:9200}"]
+#
+#   # Index naming
+#   index: "filebeat-%{[agent.version]}-%{+yyyy.MM.dd}"
+#
+#   # ILM settings
+#   ilm.enabled: true
+#   ilm.rollover_alias: "filebeat"
+#   ilm.pattern: "{now/d}-000001"
+
+# ============================== Logging =======================================
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat.log
+  keepfiles: 7
+  permissions: 0644
+
+# Metrics logging
+logging.metrics.enabled: true
+logging.metrics.period: 30s
+
+# ============================== Monitoring ====================================
+
+# Internal monitoring
+monitoring:
+  enabled: true
+
+  # Send monitoring data to Elasticsearch
+  elasticsearch:
+    hosts: ["${ELASTICSEARCH_HOST:elasticsearch:9200}"]
+
+# ============================== X-Pack Settings ===============================
+
+# X-Pack features (Enterprise features)
+xpack.monitoring.enabled: false
+
+# ============================== General Settings ==============================
+
+# Name of the shipper
+name: smartamazon-filebeat
+
+# Tags for filtering
+tags: ["smartamazon", "production", "logs"]
+
+# Custom fields
+fields:
+  environment: ${ENVIRONMENT:production}
+  region: ${REGION:us-east-1}
+
+fields_under_root: true
+
+# ============================== HTTP Endpoint =================================
+
+# Enable HTTP endpoint for health checks
+http.enabled: true
+http.host: "0.0.0.0"
+http.port: 5066
+
+# ============================== Queue Settings ================================
+
+# Memory queue settings
+queue.mem:
+  events: 4096
+  flush.min_events: 512
+  flush.timeout: 1s
+
+# ============================== Performance Tuning ============================
+
+# Max number of events to read from one input
+filebeat.config.inputs.reload.enabled: true
+filebeat.config.inputs.reload.period: 10s
+
+# Registry settings
+filebeat.registry.path: ${path.data}/registry
+filebeat.registry.file_permissions: 0600
+filebeat.registry.flush: 1s
