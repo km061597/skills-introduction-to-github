@@ -23,8 +23,11 @@
 # Logs and databases #
 ######################
 *.log
-*.sql
 *.sqlite
+
+# Allow schema files
+!database/*.sql
+!**/schema.sql
 
 # OS generated files #
 ######################

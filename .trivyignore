@@ -1,0 +1,8 @@
+# Trivy Ignore File for SmartAmazon Platform
+# Ignore vulnerabilities that don't apply to our use case
+
+# Development dependencies not used in production
+# CVE-XXXX-XXXXX  # Example: Vulnerability in dev dependency XYZ
+
+# Add specific CVEs to ignore here if they are false positives
+# or don't affect our specific use case
