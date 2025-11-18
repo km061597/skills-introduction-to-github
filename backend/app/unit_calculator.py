@@ -318,3 +318,52 @@ def extract_and_calculate_unit_price(title: str, price: Decimal) -> Tuple[Option
     unit_type = UnitCalculator.get_unit_type(unit)
 
     return unit_price, unit_type, quantity
+
+
+# UnitType enum for backward compatibility with tests
+from enum import Enum
+
+
+class UnitType(str, Enum):
+    """Unit type enumeration"""
+    WEIGHT = "weight"
+    VOLUME = "volume"
+    COUNT = "count"
+    UNKNOWN = "unknown"
+
+
+# Backward compatibility wrapper
+class UnitPriceCalculator(UnitCalculator):
+    """Wrapper class for backward compatibility with tests"""
+
+    @staticmethod
+    def extract_unit_info(title: str) -> dict:
+        """
+        Extract unit information from title (compatibility method)
+
+        Args:
+            title: Product title
+
+        Returns:
+            Dictionary with quantity, unit, and unit_type
+        """
+        quantity, unit = UnitCalculator.extract_unit_from_title(title)
+
+        # Determine unit type
+        unit_type = None
+        if unit:
+            type_str = UnitCalculator.get_unit_type(unit)
+            if type_str == "weight":
+                unit_type = UnitType.WEIGHT
+            elif type_str == "volume":
+                unit_type = UnitType.VOLUME
+            elif type_str == "count":
+                unit_type = UnitType.COUNT
+            else:
+                unit_type = UnitType.UNKNOWN
+
+        return {
+            'quantity': Decimal(str(quantity)) if quantity is not None else None,
+            'unit': unit,
+            'unit_type': unit_type
+        }

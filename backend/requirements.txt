@@ -4,7 +4,7 @@
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 gunicorn==21.2.0
-pydantic==2.5.3
+pydantic==2.6.0
 pydantic-settings==2.1.0
 
 # Database
@@ -50,4 +50,4 @@ psutil==5.9.6
 flake8==7.0.0
 black==24.3.0
 mypy==1.8.0
-safety==3.0.1
+safety==3.7.0

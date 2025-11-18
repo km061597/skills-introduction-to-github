@@ -330,3 +330,8 @@ def cached(
             return sync_wrapper
 
     return decorator
+
+
+# Backward compatibility aliases
+CacheManager = CacheService
+get_cache_key = cache_key
