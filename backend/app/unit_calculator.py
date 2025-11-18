@@ -72,10 +72,10 @@ class UnitCalculator:
         r'(\d+(?:\.\d+)?)\s*[-]?\s*(gal|gallon|gallons)\b',
 
         # Count patterns
-        r'(\d+(?:\.\d+)?)\s*[-]?\s*pack\b',
-        r'(\d+(?:\.\d+)?)\s*[-]?\s*count\b',
-        r'(\d+(?:\.\d+)?)\s*[-]?\s*ct\b',
-        r'(\d+(?:\.\d+)?)\s*[-]?\s*piece|pieces\b',
+        r'(\d+(?:\.\d+)?)\s*[-]?\s*(pack)\b',
+        r'(\d+(?:\.\d+)?)\s*[-]?\s*(count)\b',
+        r'(\d+(?:\.\d+)?)\s*[-]?\s*(ct)\b',
+        r'(\d+(?:\.\d+)?)\s*[-]?\s*(piece|pieces)\b',
 
         # Combined patterns (e.g., "12 x 16 oz")
         r'(\d+)\s*[x×]\s*(\d+(?:\.\d+)?)\s*(oz|lb|g|ml|fl\.?\s*oz)',
@@ -350,22 +350,20 @@ class UnitPriceCalculator(UnitCalculator):
         quantity, unit = UnitCalculator.extract_unit_from_title(title)
 
         # Determine unit type
-        unit_type = None
+        unit_type = UnitType.UNKNOWN
         if unit:
             type_str = UnitCalculator.get_unit_type(unit)
-            if type_str == "weight":
+            if type_str == "oz":
                 unit_type = UnitType.WEIGHT
-            elif type_str == "volume":
+            elif type_str == "fl oz":
                 unit_type = UnitType.VOLUME
             elif type_str == "count":
                 unit_type = UnitType.COUNT
-            else:
-                unit_type = UnitType.UNKNOWN
 
         return {
             'quantity': Decimal(str(quantity)) if quantity is not None else None,
             'unit': unit,
-            'unit_type': unit_type if unit_type is not None else UnitType.UNKNOWN
+            'unit_type': unit_type
         }
 
     @staticmethod
@@ -432,9 +430,9 @@ class UnitPriceCalculator(UnitCalculator):
         # Determine unit type
         type_str = UnitCalculator.get_unit_type(normalized_unit or unit)
         unit_type = UnitType.UNKNOWN
-        if type_str == "weight":
+        if type_str == "oz":
             unit_type = UnitType.WEIGHT
-        elif type_str == "volume":
+        elif type_str == "fl oz":
             unit_type = UnitType.VOLUME
         elif type_str == "count":
             unit_type = UnitType.COUNT
